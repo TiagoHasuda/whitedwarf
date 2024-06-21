@@ -40,7 +40,9 @@ async function zip(filePath, outPath) {
 
 async function buildFilesInDirectory(directory, path, projectName) {
   var functions = []
+  console.log({ directory, path, projectName })
   var items = fs.readdirSync(directory, {withFileTypes: true})
+  console.log({ items })
   for (var index = 0; index < items.length; index++) {
     var item = items[index]
     if (ignores.includes(`${path}${item.name}`)) continue
