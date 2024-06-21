@@ -37,5 +37,5 @@ jobs:
       env:
         DYNAMO_DB_TABLE: ${{ secrets.DYNAMO_DB_TABLE }}
       run: |
-        ls build
+        ls build/src/auth
         node build/deploy.js
