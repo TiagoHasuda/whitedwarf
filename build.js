@@ -44,7 +44,7 @@ async function buildFilesInDirectory(directory, path, projectName) {
   for (var index = 0; index < items.length; index++) {
     var item = items[index]
     if (ignores.includes(`${path}${item.name}`)) continue
-    if (item.isFile() && item.name.endsWith(".ts") && fs.existsSync(`${path}${item.name}`)) {
+    if (item.isFile() && item.name.endsWith(".ts")) {
       var name = item.name.slice(0, item.name.length - 3)
       process.stdout.write(`Compiling function ${name}...`)
       await execute(`tsc ${path}${item.name} --outDir build/${path}`)
@@ -59,10 +59,10 @@ async function buildFilesInDirectory(directory, path, projectName) {
         memorySize: module.memorySize,
       })
       console.info(`Done`)
-    } else if (item.isDirectory() && fs.existsSync(`${path}${item.name}`)) {
+    } else if (item.isDirectory()) {
       functions.push(
         ...(await buildFilesInDirectory(
-          `${item.parentPath}\\${item.name}`,
+          `${item.parentPath}/${item.name}`,
           `${path}${item.name}/`,
           projectName
         ))
