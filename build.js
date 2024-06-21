@@ -2,7 +2,7 @@ const fs = require("fs")
 const exec = require("child_process").exec
 const zipper = require("zip-local")
 
-const ignores = fs.readFileSync(".buildignore").toString().split("\n")
+const ignores = fs.readFileSync(".buildignore").toString().split("\n").map(item => item.replace('\r', ''))
 
 async function write(writeStream, text) {
   return new Promise((res, rej) => {
