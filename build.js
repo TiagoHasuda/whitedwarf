@@ -120,10 +120,14 @@ async function buildAndWriteDeployFile() {
     await execute('aws lambda get-function --function-name=${item.name}')
     await execute('aws lambda update-function-code --function-name=${
       item.name
-    } --zip-file=fileb://build/${item.path/*WAIT FOR THE UPDATE TO FINISH TO UPDATE THE CONFIG*/}')
+    } --zip-file=fileb://build/${
+        item.path /*WAIT FOR THE UPDATE TO FINISH TO UPDATE THE CONFIG*/
+      }')
     let waiting = true
     while(waiting) {
-      waiting = (await execute('aws lambda get-function-configuration --function-name=${item.name}')).State === 'Pending'
+      waiting = (await execute('aws lambda get-function-configuration --function-name=${
+        item.name
+      }')).State === 'Pending'
     }
     await execute('aws lambda update-function-configuration --function-name=${
       item.name
@@ -131,14 +135,15 @@ async function buildAndWriteDeployFile() {
         item.memorySize || defaultMemorySize || 128
       }')
   } catch (err) {
-    console.error({err})
+    if (!err.message.includes('Function not found'))
+      console.error({err})
     await execute('aws lambda create-function --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
         item.memorySize || defaultMemorySize || 128
       } --zip-file=fileb://build/${item.path} --role=${
         process.env.AWS_ROLE
-      } --runtime=nodejs20.x --handler=${item.handler} --description=aws:states:opt-out')
+      } --runtime=nodejs20.x --handler=${item.handler}')
   } finally {
     console.info('Done')
   }\n`
