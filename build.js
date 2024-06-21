@@ -118,14 +118,13 @@ async function buildAndWriteDeployFile() {
     await execute('aws lambda get-function --function-name=${item.name}')
     await execute('aws lambda update-function-code --function-name=${
       item.name
-    } --zip-file=fileb://build/${item.path} --handler=${item.handler}')
+    } --zip-file=fileb://build/${item.path}')
     await execute('aws lambda update-function-configuration --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
         item.memorySize || defaultMemorySize || 128
       }')
-  } catch (err) {
-    console.error({err})
+  } catch {
     await execute('aws lambda create-function --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
