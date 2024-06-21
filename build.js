@@ -123,7 +123,9 @@ async function buildAndWriteDeployFile() {
     } --zip-file=fileb://build/${item.path/*WAIT FOR THE UPDATE TO FINISH TO UPDATE THE CONFIG*/}')
     let waiting = true
     while(waiting) {
-      waiting = (await execute('aws lambda get-function-configuration --function-name=${item.name}')).State !== 'Pending'
+      let funcConf = await execute('aws lambda get-function-configuration --function-name=${item.name}')
+      console.log({ funcConf })
+      waiting = funcConf.State === 'Pending'
     }
     await execute('aws lambda update-function-configuration --function-name=${
       item.name
