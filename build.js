@@ -120,7 +120,11 @@ async function buildAndWriteDeployFile() {
     await execute('aws lambda get-function --function-name=${item.name}')
     await execute('aws lambda update-function-code --function-name=${
       item.name
-    } --zip-file=fileb://build/${item.path}')
+    } --zip-file=fileb://build/${item.path/*WAIT FOR THE UPDATE TO FINISH TO UPDATE THE CONFIG*/}')
+    let waiting = true
+    while(waiting) {
+      waiting = (await execute('aws lambda get-function-configuration --function-name=${item.name}')).State !== 'Pending'
+    }
     await execute('aws lambda update-function-configuration --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
