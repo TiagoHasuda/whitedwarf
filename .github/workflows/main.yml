@@ -23,6 +23,9 @@ jobs:
       run: |
         yarn
         yarn build
+        echo ${{ secrets.AWS_ACCESS_KEY_ID }}
+        echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        echo ${{ env.AWS_REGION }}
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
