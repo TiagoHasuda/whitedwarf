@@ -124,7 +124,8 @@ async function buildAndWriteDeployFile() {
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
         item.memorySize || defaultMemorySize || 128
       }')
-  } catch {
+  } catch (err) {
+    console.error({err})
     await execute('aws lambda create-function --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
