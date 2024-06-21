@@ -123,7 +123,7 @@ async function buildAndWriteDeployFile() {
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
         item.memorySize || defaultMemorySize || 128
-      } --zip-file=fileb://build/${item.path} --role=${process.env.AWS_ROLE}')
+      } --zip-file=fileb://build/${item.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x')
   } finally {
     console.info('Done')
   }\n`
