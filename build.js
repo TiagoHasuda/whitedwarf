@@ -55,6 +55,7 @@ async function buildFilesInDirectory(directory, path, projectName) {
       functions.push({
         name: `${projectName}_${name}`,
         path: `${path}${name}.zip`,
+        handler: `${name}.handler`,
         timeout: module.timeout,
         memorySize: module.memorySize,
       })
@@ -95,24 +96,29 @@ async function buildAndWriteDeployFile() {
   })
 }\n\n`
   )
-  await write(writer, `async function deploy() {
-  const buildFunctions = ['${functions.map(item => item.name).join("','")}']
+  await write(
+    writer,
+    `async function deploy() {
+  const buildFunctions = ['${functions.map((item) => item.name).join("','")}']
   const currFunctionsRaw = JSON.parse(await execute('aws lambda list-functions'))
   const currFunctions = currFunctionsRaw.Functions.map(item => item.FunctionName)
   const toExclude = currFunctions.filter(funcName => !buildFunctions.includes(funcName))\n
   for(var index = 0; index < toExclude.length; index++) {
     await execute(\`aws lambda delete-function --function-name=\${toExclude[index]}\`)
-  }\n`)
+  }\n`
+  )
   for (var index = 0; index < functions.length; index++) {
     const item = functions[index]
     await write(
       writer,
       `\n  try {
-    process.stdout.write('[${index + 1}/${functions.length}]Deploying function ${item.name}...')
+    process.stdout.write('[${index + 1}/${
+        functions.length
+      }]Deploying function ${item.name}...')
     await execute('aws lambda get-function --function-name=${item.name}')
     await execute('aws lambda update-function-code --function-name=${
       item.name
-    } --zip-file=fileb://build/${item.path}')
+    } --zip-file=fileb://build/${item.path} --handler=${item.handler}')
     await execute('aws lambda update-function-configuration --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
@@ -123,7 +129,9 @@ async function buildAndWriteDeployFile() {
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
         item.memorySize || defaultMemorySize || 128
-      } --zip-file=fileb://build/${item.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x')
+      } --zip-file=fileb://build/${item.path} --role=${
+        process.env.AWS_ROLE
+      } --runtime=nodejs20.x --handler=${item.handler}')
   } finally {
     console.info('Done')
   }\n`
