@@ -112,7 +112,7 @@ async function buildAndWriteDeployFile() {
     await execute('aws lambda get-function --function-name=${item.name}')
     await execute('aws lambda update-function-code --function-name=${
       item.name
-    } --zip-file=fileb:/${process.cwd()}/${item.path}')
+    } --zip-file=fileb://${item.path}')
     await execute('aws lambda update-function-configuration --function-name=${
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
@@ -123,7 +123,7 @@ async function buildAndWriteDeployFile() {
       item.name
     } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
         item.memorySize || defaultMemorySize || 128
-      } --zip-file=fileb:/${process.cwd()}/${item.path} --role=${process.env.AWS_ROLE}')
+      } --zip-file=fileb://${item.path} --role=${process.env.AWS_ROLE}')
   } finally {
     console.info('Done')
   }\n`
