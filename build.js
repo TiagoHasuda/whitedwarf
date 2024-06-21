@@ -104,7 +104,9 @@ async function buildAndWriteDeployFile() {
   const currFunctions = currFunctionsRaw.Functions.map(item => item.FunctionName)
   const toExclude = currFunctions.filter(funcName => !buildFunctions.includes(funcName))\n
   for(var index = 0; index < toExclude.length; index++) {
+    process.stdout.write(\`Deleting function \${toExclude[index]}...\`)
     await execute(\`aws lambda delete-function --function-name=\${toExclude[index]}\`)
+    console.info('Done')
   }\n`
   )
   for (var index = 0; index < functions.length; index++) {
@@ -132,7 +134,7 @@ async function buildAndWriteDeployFile() {
         item.memorySize || defaultMemorySize || 128
       } --zip-file=fileb://build/${item.path} --role=${
         process.env.AWS_ROLE
-      } --runtime=nodejs20.x --handler=${item.handler}')
+      } --runtime=nodejs20.x --handler=${item.handler} --description=aws:states:opt-out')
   } finally {
     console.info('Done')
   }\n`
