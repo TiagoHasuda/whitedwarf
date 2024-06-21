@@ -2,7 +2,7 @@ const fs = require("fs")
 const exec = require("child_process").exec
 const zipper = require("zip-local")
 
-const ignores = fs.readFileSync(".buildignore").toString().split("\r\n")
+const ignores = fs.readFileSync(".buildignore").toString().split("\n")
 
 async function write(writeStream, text) {
   return new Promise((res, rej) => {
@@ -40,9 +40,7 @@ async function zip(filePath, outPath) {
 
 async function buildFilesInDirectory(directory, path, projectName) {
   var functions = []
-  console.log({ directory, path, projectName, ignores })
   var items = fs.readdirSync(directory, {withFileTypes: true})
-  console.log({ items })
   for (var index = 0; index < items.length; index++) {
     var item = items[index]
     if (ignores.includes(`${path}${item.name}`)) continue
