@@ -21,9 +21,7 @@ jobs:
     
     - name: Build
       run: |
-        pwd
         yarn
-        ls build
         yarn build
     
     - name: Configure AWS credentials
