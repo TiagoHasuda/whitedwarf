@@ -109,7 +109,7 @@ async function buildAndWriteDeployFile() {
   await write(jsonWriter, JSON.stringify(jsonOut))
   jsonWriter.close()
   var writer = fs.createWriteStream("build/deploy.js")
-  await write(writer, `var exec = require("child_process").exec\n\n`)
+  await write(writer, `const fs = require("fs")\nvar exec = require("child_process").exec\n\n`)
   await write(
     writer,
     `async function execute(command) {
