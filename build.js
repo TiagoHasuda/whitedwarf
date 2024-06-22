@@ -132,9 +132,9 @@ async function buildAndWriteDeployFile() {
   } catch {}
   let lambda
   if (!exists) {
-    lambda = JSON.parse(await execute(\`aws lambda create-function --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize || 128} --zip-file=fileb://build/\${func.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x --handler=\${func.handler}\`)).Configuration
+    lambda = JSON.parse(await execute(\`aws lambda create-function --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize || 128} --zip-file=fileb://build/\${func.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x --handler=\${func.handler}\`))
   } else {
-    lambda = JSON.parse(await execute(\`aws lambda update-function-code --function-name=\${func.name} --zip-file=fileb://build/\${func.path}\`)).Configuration
+    lambda = JSON.parse(await execute(\`aws lambda update-function-code --function-name=\${func.name} --zip-file=fileb://build/\${func.path}\`))
     let waiting = true
     while(waiting) {
       waiting = (await execute(\`aws lambda get-function-configuration --function-name=\${func.name}\`)).State === 'Pending'
@@ -142,6 +142,7 @@ async function buildAndWriteDeployFile() {
     await execute(\`aws lambda update-function-configuration --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize}\`)
   }
   const resources = JSON.parse(await execute(\`aws apigateway get-resources --rest-api-id=${process.env.AWS_REST_API_ID}\`)).items
+  console.log({ lambda, resources })
   let currPath = resources.find(res => res.path === "/")
   let currPathStr = ""
   for(var index = 0; index < func.apiPath.length; index++) {
