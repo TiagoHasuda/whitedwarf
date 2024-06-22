@@ -146,7 +146,7 @@ async function buildAndWriteDeployFile() {
   await write(
     writer,
     `async function deploy() {
-  const { functionNames, functions } = JSON.parse(fs.readFileSync("buildconfig.json"))
+  const { functionNames, functions } = JSON.parse(fs.readFileSync("build/deployParams.json"))
   const currFunctionsRaw = JSON.parse(await execute('aws lambda list-functions'))
   const currFunctions = currFunctionsRaw.Functions.map(item => item.FunctionName)
   const toExclude = currFunctions.filter(funcName => !functionNames.includes(funcName))\n
