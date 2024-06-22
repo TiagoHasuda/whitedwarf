@@ -143,6 +143,7 @@ async function buildAndWriteDeployFile() {
     await execute(\`aws lambda update-function-configuration --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize}\`)
   }
   const resources = JSON.parse(await execute(\`aws apigateway get-resources --rest-api-id=${process.env.AWS_REST_API_ID}\`)).items
+  console.log({ lambda, resources, path: func.apiPath })
   let currPath = resources.find(res => res.path === "/")
   let currPathStr = ""
   for(var index = 0; index < func.apiPath.length; index++) {
