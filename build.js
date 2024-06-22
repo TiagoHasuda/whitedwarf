@@ -177,7 +177,7 @@ async function buildAndWriteDeployFile() {
   for(var index = 0; index < functions.length; index++) {
     const item = functions[index]
     process.stdout.write(\`[\${index + 1}/\${functions.length}] Deploying function \${item.name}...\`)
-    deployFunction(item)
+    await deployFunction(item)
     console.info('Done')
   }\n`
   )
