@@ -110,7 +110,10 @@ async function buildAndWriteDeployFile() {
   await write(jsonWriter, JSON.stringify(jsonOut))
   jsonWriter.close()
   var writer = fs.createWriteStream("build/deploy.js")
-  await write(writer, `const fs = require("fs")\nvar exec = require("child_process").exec\n\n`)
+  await write(
+    writer,
+    `const fs = require("fs")\nvar exec = require("child_process").exec\n\n`
+  )
   await write(
     writer,
     `async function execute(command) {
@@ -155,9 +158,15 @@ async function buildAndWriteDeployFile() {
       currPath = path
     }
   }
-  await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --authorization-type NONE\`)
+  try {
+    await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --authorization-type NONE\`)
+  } catch {
+    await execute(\`aws apigateway update-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod}\`) 
+  }
   const uri = \`arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/\${lambda.FunctionName}\`
-  await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --uri=\${uri} \`)
+  try {
+    await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --uri=\${uri} \`)
+  } catch { }
 }\n\n`
   )
 
