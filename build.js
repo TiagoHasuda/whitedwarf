@@ -146,7 +146,6 @@ async function buildAndWriteDeployFile() {
     await execute(\`aws lambda update-function-configuration --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize}\`)
   }
   const resources = JSON.parse(await execute(\`aws apigateway get-resources --rest-api-id=${process.env.AWS_REST_API_ID}\`)).items
-  console.log({ lambda, resources, path: func.apiPath })
   let currPath = resources.find(res => res.path === "/")
   let currPathStr = ""
   for(var index = 0; index < func.apiPath.length; index++) {
@@ -160,9 +159,7 @@ async function buildAndWriteDeployFile() {
   }
   try {
     await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --authorization-type NONE\`)
-  } catch {
-    await execute(\`aws apigateway update-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod}\`) 
-  }
+  } catch { }
   const uri = \`arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/\${lambda.FunctionName}\`
   try {
     await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --uri=\${uri} \`)
