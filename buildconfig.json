@@ -1,5 +1,6 @@
 {
   "projectName": "whitedwarf",
   "defaultTimeout": 60,
-  "defaultMemorySize": 128
+  "defaultMemorySize": 128,
+  "rootFolder": "src"
 }

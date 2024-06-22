@@ -30,3 +30,5 @@ export function handler(event) {
 }
 
 export const timeout = 10
+
+export const httpMethod = "GET"

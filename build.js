@@ -1,8 +1,13 @@
 const fs = require("fs")
 const exec = require("child_process").exec
 const zipper = require("zip-local")
+const path = require("path")
 
-const ignores = fs.readFileSync(".buildignore").toString().split("\n").map(item => item.replace('\r', ''))
+const ignores = fs
+  .readFileSync(".buildignore")
+  .toString()
+  .split("\n")
+  .map((item) => item.replace("\r", ""))
 
 async function write(writeStream, text) {
   return new Promise((res, rej) => {
@@ -47,17 +52,23 @@ async function buildFilesInDirectory(directory, path, projectName) {
     if (item.isFile() && item.name.endsWith(".ts")) {
       var name = item.name.slice(0, item.name.length - 3)
       process.stdout.write(`Compiling function ${name}...`)
-      await execute(`tsc ${path}${item.name} --outDir build/${path}`)
+      await execute(`tsc ${directory}/${item.name} --outDir build/${path}`)
       await zip(`build/${path}${name}.js`, `build/${path}${name}.zip`)
       var module = require(`./build/${path}${name}.js`)
       if (!module.handler)
         throw new Error(`Module ${name} doesn't export its handler function`)
+      if (!module.httpMethod)
+        throw new Error(`Module ${name} doesn't export its HTTP method`)
+      const apiPath = path.split("/")
+      apiPath.pop()
       functions.push({
-        name: `${projectName}_${name}`,
+        name: `${projectName}_${path.replaceAll("/", "_")}${name}`,
         path: `${path}${name}.zip`,
         handler: `${name}.handler`,
+        apiPath,
         timeout: module.timeout,
         memorySize: module.memorySize,
+        httpMethod: module.httpMethod,
       })
       console.info(`Done`)
     } else if (item.isDirectory()) {
@@ -77,11 +88,26 @@ async function buildAndWriteDeployFile() {
   if (fs.existsSync("build")) fs.rmSync("build", {recursive: true})
   console.info(`Scanning and compiling functions:`)
   const rawConfig = fs.readFileSync("buildconfig.json")
-  const {defaultTimeout, defaultMemorySize, projectName} = JSON.parse(rawConfig)
-  var functions = await buildFilesInDirectory(process.cwd(), "", projectName)
-  console.info(
-    `${functions.length} functions compiled successfully!\nCreating deploy.js file...`
+  const {defaultTimeout, defaultMemorySize, projectName, rootFolder} =
+    JSON.parse(rawConfig)
+  var functions = await buildFilesInDirectory(
+    path.join(process.cwd(), rootFolder),
+    "",
+    projectName
   )
+  console.info(
+    `${functions.length} functions compiled successfully!\nCreating deployment files...`
+  )
+  const jsonOut = {}
+  jsonOut.functionNames = functions.map((item) => item.name)
+  jsonOut.functions = functions.map((func) => ({
+    ...func,
+    timeout: func.timeout || defaultTimeout || 60,
+    memorySize: func.memorySize || defaultMemorySize || 128,
+  }))
+  const jsonWriter = fs.createWriteStream("build/deployParams.json")
+  await write(jsonWriter, JSON.stringify(jsonOut))
+  jsonWriter.close()
   var writer = fs.createWriteStream("build/deploy.js")
   await write(writer, `var exec = require("child_process").exec\n\n`)
   await write(
@@ -98,57 +124,45 @@ async function buildAndWriteDeployFile() {
   )
   await write(
     writer,
+    `async function deployFunction(func) {
+  let exists = false
+  try {
+    await execute(\`aws lambda get-function --function-name=\${func.name}\`)
+    exists = true
+  } catch {}
+  if (!exists) {
+    await execute(\`aws lambda create-function --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize || 128} --zip-file=fileb://build/\${func.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x --handler=\${func.handler}\`)
+  } else {
+    await execute(\`aws lambda update-function-code --function-name=\${func.name} --zip-file=fileb://build/\${func.path}\`)
+    let waiting = true
+    while(waiting) {
+      waiting = (await execute(\`aws lambda get-function-configuration --function-name=\${func.name}\`)).State === 'Pending'
+    }
+    await execute(\`aws lambda update-function-configuration --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize}\`)
+  }
+}\n\n`
+  )
+
+  await write(
+    writer,
     `async function deploy() {
-  const buildFunctions = ['${functions.map((item) => item.name).join("','")}']
+  const { functionNames, functions } = JSON.parse(fs.readFileSync("buildconfig.json"))
   const currFunctionsRaw = JSON.parse(await execute('aws lambda list-functions'))
   const currFunctions = currFunctionsRaw.Functions.map(item => item.FunctionName)
-  const toExclude = currFunctions.filter(funcName => !buildFunctions.includes(funcName))\n
+  const toExclude = currFunctions.filter(funcName => !functionNames.includes(funcName))\n
   for(var index = 0; index < toExclude.length; index++) {
     process.stdout.write(\`Deleting function \${toExclude[index]}...\`)
     await execute(\`aws lambda delete-function --function-name=\${toExclude[index]}\`)
     console.info('Done')
-  }\n`
-  )
-  for (var index = 0; index < functions.length; index++) {
+  }
+  
+  for(var index = 0; index < functions.length; index++) {
     const item = functions[index]
-    await write(
-      writer,
-      `\n  try {
-    process.stdout.write('[${index + 1}/${
-        functions.length
-      }]Deploying function ${item.name}...')
-    await execute('aws lambda get-function --function-name=${item.name}')
-    await execute('aws lambda update-function-code --function-name=${
-      item.name
-    } --zip-file=fileb://build/${
-        item.path /*WAIT FOR THE UPDATE TO FINISH TO UPDATE THE CONFIG*/
-      }')
-    let waiting = true
-    while(waiting) {
-      waiting = (await execute('aws lambda get-function-configuration --function-name=${
-        item.name
-      }')).State === 'Pending'
-    }
-    await execute('aws lambda update-function-configuration --function-name=${
-      item.name
-    } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
-        item.memorySize || defaultMemorySize || 128
-      }')
-  } catch (err) {
-    if (!err.message.includes('Function not found'))
-      console.error({err})
-    await execute('aws lambda create-function --function-name=${
-      item.name
-    } --timeout=${item.timeout || defaultTimeout || 60} --memory-size=${
-        item.memorySize || defaultMemorySize || 128
-      } --zip-file=fileb://build/${item.path} --role=${
-        process.env.AWS_ROLE
-      } --runtime=nodejs20.x --handler=${item.handler}')
-  } finally {
+    process.stdout.write('[\${index + 1}/\${functions.length}] Deploying function \${item.name}...')
+    deployFunction(item)
     console.info('Done')
   }\n`
-    )
-  }
+  )
   await write(writer, `}\n\ndeploy()`)
   writer.close()
 }
