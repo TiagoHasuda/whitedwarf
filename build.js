@@ -130,16 +130,32 @@ async function buildAndWriteDeployFile() {
     await execute(\`aws lambda get-function --function-name=\${func.name}\`)
     exists = true
   } catch {}
+  let lambda
   if (!exists) {
-    await execute(\`aws lambda create-function --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize || 128} --zip-file=fileb://build/\${func.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x --handler=\${func.handler}\`)
+    lambda = JSON.parse(await execute(\`aws lambda create-function --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize || 128} --zip-file=fileb://build/\${func.path} --role=${process.env.AWS_ROLE} --runtime=nodejs20.x --handler=\${func.handler}\`)).Configuration
   } else {
-    await execute(\`aws lambda update-function-code --function-name=\${func.name} --zip-file=fileb://build/\${func.path}\`)
+    lambda = JSON.parse(await execute(\`aws lambda update-function-code --function-name=\${func.name} --zip-file=fileb://build/\${func.path}\`)).Configuration
     let waiting = true
     while(waiting) {
       waiting = (await execute(\`aws lambda get-function-configuration --function-name=\${func.name}\`)).State === 'Pending'
     }
     await execute(\`aws lambda update-function-configuration --function-name=\${func.name} --timeout=\${func.timeout || defaultTimeout} --memory-size=\${func.memorySize || defaultMemorySize}\`)
   }
+  const resources = JSON.parse(await execute(\`aws apigateway get-resources --rest-api-id=${process.env.AWS_REST_API_ID}\`)).items
+  let currPath = resources.find(res => res.path === "/")
+  let currPathStr = ""
+  for(var index = 0; index < func.apiPath.length; index++) {
+    currPathStr += "/" + func.apiPath[index]
+    const path = resources.find(res => res.path === currPathStr)
+    if (!path) {
+      currPath = JSON.parse(await execute(\`aws apigateway create-resource --rest-api-id=${process.env.AWS_REST_API_ID} --parent-id=\${currPath.id} --path-part=\${func.apiPath[index]}\`))
+    } else {
+      currPath = path
+    }
+  }
+  await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --authorization-type NONE\`)
+  const uri = \`arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/\${lambda.FunctionArn}\`
+  await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --uri=\${uri} \`)
 }\n\n`
   )
 
