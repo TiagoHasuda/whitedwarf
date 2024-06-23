@@ -159,7 +159,7 @@ async function buildAndWriteDeployFile() {
   }
   try {
     await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --authorization-type=NONE --no-api-key-required\`)
-    await execute(\`aws lambda add-permission --function-name=\${func.name} --statement-id=apigateway_\${func.name} --action=lambda:InvokeFunction --principal=apigateway.amazonaws.com --source-arn=arn:aws:execute-api:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_ID}:\${currPath.id}/*/\${func.httpMethod}\${currPathStr || "/"}\`)
+    await execute(\`aws lambda add-permission --function-name=\${func.name} --statement-id=apigateway_\${func.name} --action=lambda:InvokeFunction --principal=apigateway.amazonaws.com --source-arn=arn:aws:execute-api:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_ID}:${process.env.AWS_REST_API_ID}/*/\${func.httpMethod}\${currPathStr || "/"}\`)
   } catch (putMethodErr) {
     console.error({putMethodErr})
   }
