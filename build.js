@@ -158,11 +158,11 @@ async function buildAndWriteDeployFile() {
     }
   }
   try {
-    await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=POST --authorization-type NONE\`)
+    await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=POST --authorization-type=NONE --api-key-required=false\`)
   } catch { }
   const uri = \`arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/2015-03-31/functions/\${lambda.FunctionArn}/invocations\`
   try {
-    await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --content-handling=CONVERT_TO_TEXT --uri=\${uri} \`)
+    await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --content-handling=CONVERT_TO_TEXT --passthrough-behavior=WHEN_NO_MATCH --timeout-in-millis=\${(func.timeout || defaultTimeout)*1000} --uri=\${uri} \`)
   } catch (err) {
     console.log({err})
   }
