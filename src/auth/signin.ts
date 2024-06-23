@@ -33,7 +33,7 @@ export function handler(event, context, callback) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      test: "asdada"
+      test: "Lol trol"
     }),
   })
 }
