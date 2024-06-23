@@ -188,15 +188,30 @@ async function buildAndWriteDeployFile() {
     writer,
     `async function deploy() {
   const { functionNames, functions } = JSON.parse(fs.readFileSync("build/deployParams.json"))
-  const currFunctionsRaw = JSON.parse(await execute('aws lambda list-functions'))
-  const currFunctions = currFunctionsRaw.Functions.map(item => item.FunctionName)
+  const currFunctionsRaw = JSON.parse(await execute('aws lambda list-functions')).Functions
+  const currFunctions = currFunctionsRaw.map(item => item.FunctionName)
   const toExclude = currFunctions.filter(funcName => !functionNames.includes(funcName))\n
   for(var index = 0; index < toExclude.length; index++) {
     process.stdout.write(\`Deleting function \${toExclude[index]}...\`)
     await execute(\`aws lambda delete-function --function-name=\${toExclude[index]}\`)
     console.info('Done')
-  }
-  
+  }\n
+  const currResourcesRaw = JSON.parse(await execute('aws apigateway get-resources --rest-api-id=${process.env.AWS_REST_API_ID}')).items
+  const paths = []
+  functions.forEach(func => {
+    let currPath = ""
+    func.apiPath.forEach(item => {
+      currPath += "/" + item
+      if (!paths.includes(currPath))
+        paths.push(currPath)
+    })
+  })
+  const resourcesToExclude = currResourcesRaw.filter(currResourceItem => !pahts.include(currResourceItem.path))\n
+  for (var index = 0; index < resourcesToExclude; index++) {
+    process.stdout.write(\`Deleting resource \${resourcesToExclude[index].path}...\`)
+    await execute(\`aws apigateway delete-resource --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${resourcesToExclude[index].id}\`)
+    console.info('Done')
+  }\n
   for(var index = 0; index < functions.length; index++) {
     const item = functions[index]
     process.stdout.write(\`[\${index + 1}/\${functions.length}] Deploying function \${item.name}...\`)
