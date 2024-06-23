@@ -162,7 +162,7 @@ async function buildAndWriteDeployFile() {
   } catch { }
   const uri = \`arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/2015-03-31/functions/\${lambda.FunctionArn}/invocations\`
   try {
-    await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=POST --type=AWS_PROXY --integration-http-method=\${func.httpMethod} --content-handling=CONVERT_TO_TEXT --uri=\${uri} \`)
+    await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=POST --type=AWS_PROXY --content-handling=CONVERT_TO_TEXT --uri=\${uri} \`)
   } catch (err) {
     console.log({err})
   }
