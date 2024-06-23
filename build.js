@@ -166,6 +166,9 @@ async function buildAndWriteDeployFile() {
     await execute(\`aws apigateway delete-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod}\`)
   }
   await execute(\`aws apigateway put-method --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --authorization-type=NONE --no-api-key-required\`)
+  try {
+    await execute(\`aws lambda remove-permission --function-name=\${func.name} --statement-id=apigateway_\${func.name}\`)
+  } catch {}
   await execute(\`aws lambda add-permission --function-name=\${func.name} --statement-id=apigateway_\${func.name} --action=lambda:InvokeFunction --principal=apigateway.amazonaws.com --source-arn=arn:aws:execute-api:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_ID}:${process.env.AWS_REST_API_ID}/*/\${func.httpMethod}\${currPathStr || "/"}\`)
   const uri = \`arn:aws:apigateway:${process.env.AWS_REGION}:lambda:path/2015-03-31/functions/\${lambda.FunctionArn}/invocations\`
   let integrationExists = false
