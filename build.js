@@ -206,7 +206,7 @@ async function buildAndWriteDeployFile() {
         paths.push(currPath)
     })
   })
-  const resourcesToExclude = currResourcesRaw.filter(currResourceItem => !pahts.include(currResourceItem.path))\n
+  const resourcesToExclude = currResourcesRaw.filter(currResourceItem => !paths.include(currResourceItem.path))\n
   for (var index = 0; index < resourcesToExclude; index++) {
     process.stdout.write(\`Deleting resource \${resourcesToExclude[index].path}...\`)
     await execute(\`aws apigateway delete-resource --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${resourcesToExclude[index].id}\`)
