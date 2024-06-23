@@ -25,6 +25,7 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
         AWS_REST_API_ID: ${{ secrets.AWS_REST_API_ID }}
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
       run: |
         yarn
         yarn build

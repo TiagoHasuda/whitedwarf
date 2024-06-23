@@ -180,6 +180,7 @@ async function buildAndWriteDeployFile() {
     await execute(\`aws apigateway delete-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod}\`)
   }
   await execute(\`aws apigateway put-integration --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${currPath.id} --http-method=\${func.httpMethod} --type=AWS_PROXY --integration-http-method=POST --content-handling=CONVERT_TO_TEXT --passthrough-behavior=WHEN_NO_MATCH --timeout-in-millis=10000 --uri=\${uri} \`)
+  await execute(\`aws apigateway create-deployment --rest-api-id=${process.env.AWS_REST_API_ID} --stage-name=${process.env.ENVIRONMENT}\`)
 }\n\n`
   )
 
