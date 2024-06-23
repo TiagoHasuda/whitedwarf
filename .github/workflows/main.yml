@@ -24,6 +24,7 @@ jobs:
         AWS_ROLE: ${{ secrets.AWS_ROLE }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
         AWS_REST_API_ID: ${{ secrets.AWS_REST_API_ID }}
+        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
         yarn
         yarn build
