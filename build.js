@@ -197,7 +197,7 @@ async function buildAndWriteDeployFile() {
     console.info('Done')
   }\n
   const currResourcesRaw = JSON.parse(await execute('aws apigateway get-resources --rest-api-id=${process.env.AWS_REST_API_ID}')).items
-  const paths = []
+  const paths = ["/"]
   functions.forEach(func => {
     let currPath = ""
     func.apiPath.forEach(item => {
@@ -208,7 +208,7 @@ async function buildAndWriteDeployFile() {
   })
   const resourcesToExclude = currResourcesRaw.filter(currResourceItem => !paths.includes(currResourceItem.path))\n
   console.log({currResourcesRaw,paths,resourcesToExclude})
-  for (var index = 0; index < resourcesToExclude; index++) {
+  for (var index = 0; index < resourcesToExclude.length; index++) {
     process.stdout.write(\`Deleting resource \${resourcesToExclude[index].path}...\`)
     await execute(\`aws apigateway delete-resource --rest-api-id=${process.env.AWS_REST_API_ID} --resource-id=\${resourcesToExclude[index].id}\`)
     console.info('Done')
