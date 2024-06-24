@@ -1,14 +1,10 @@
-// const {DynamoDBClient} = require("@aws-sdk/client-dynamodb")
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb"
 
-// const {
-//   DynamoDBDocumentClient,
-//   GetCommand,
-//   PutCommand,
-// } = require("@aws-sdk/lib-dynamodb")
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+} from "@aws-sdk/lib-dynamodb"
 
-// const USERS_TABLE = process.env.USERS_TABLE
-// const client = new DynamoDBClient()
-// const docClient = DynamoDBDocumentClient.from(client)
 
 // const params = {
 //   TableName: USERS_TABLE,
@@ -17,23 +13,26 @@
 //   },
 // }
 
-// const command = new GetCommand(params)
-// const {Item} = await docClient.send(command)
 
 // const params1 = {
 //   TableName: USERS_TABLE,
 //   Item: {userId, name},
 // }
 
-export function handler(event, context, callback) {
-  console.log({ event })
+export async function handler(event, context, callback) {
+  const USERS_TABLE = process.env.USERS_TABLE
+  const client = new DynamoDBClient()
+  const docClient = DynamoDBDocumentClient.from(client)
+  const command = new GetCommand({ TableName: USERS_TABLE, Key: {} })
+  const result = await docClient.send(command)
+  console.log({ result })
   callback(null, {
     statusCode: "200",
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      test: "Lol trol"
+      result,
     }),
   })
 }
