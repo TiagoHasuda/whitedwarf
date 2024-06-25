@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb"
 import {
   DynamoDBDocumentClient,
   ScanCommand,
+  QueryCommand,
 } from "@aws-sdk/lib-dynamodb"
 
 export async function handler(event, context, callback) {
@@ -10,7 +11,7 @@ export async function handler(event, context, callback) {
   const USERS_TABLE = process.env.USERS_TABLE
   const client = new DynamoDBClient()
   const docClient = DynamoDBDocumentClient.from(client)
-  const command = new ScanCommand({ TableName: USERS_TABLE, FilterExpression: `email = :email`, ExpressionAttributeValues: { ":email": data.email } })
+  const command = new ScanCommand({ TableName: USERS_TABLE, FilterExpression: `#email = :email_val`, ExpressionAttributeNames: { "#email": "email" }, ExpressionAttributeValues: { ":email_val": data.email } })
   const result = await docClient.send(command)
   callback(null, {
     statusCode: 200,
