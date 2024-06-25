@@ -26,4 +26,4 @@ export async function handler(event, context, callback) {
 
 export const timeout = 10
 
-export const httpMethod = "GET"
+export const httpMethod = "POST"
