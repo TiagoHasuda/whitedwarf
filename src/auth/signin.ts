@@ -7,7 +7,7 @@ import {
 } from "@aws-sdk/lib-dynamodb"
 
 export async function handler(event, context, callback) {
-  const data = event.body
+  const data = JSON.parse(event.body)
   const email = data?.email || ""
   const USERS_TABLE = process.env.USERS_TABLE
   console.log({ data, event })
