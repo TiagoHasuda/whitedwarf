@@ -22,6 +22,8 @@ export async function handler(event, context, callback) {
     },
     body: {
       data,
+      dataEmail: data.email,
+      email,
       result
     }
   })
