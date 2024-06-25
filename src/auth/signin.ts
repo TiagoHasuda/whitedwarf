@@ -20,12 +20,12 @@ export async function handler(event, context, callback) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: {
+    body: JSON.stringify({
       data,
       dataEmail: data.email,
       email,
       result
-    }
+    })
   })
 }
 
