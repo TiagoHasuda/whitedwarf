@@ -8,11 +8,12 @@ import {
 
 export async function handler(event, context, callback) {
   const data = event.body
+  const email = data?.email || ""
   const USERS_TABLE = process.env.USERS_TABLE
   console.log({ data, event })
   const client = new DynamoDBClient()
   const docClient = DynamoDBDocumentClient.from(client)
-  const command = new ScanCommand({ TableName: USERS_TABLE, FilterExpression: `#email = :email_val`, ExpressionAttributeNames: { "#email": "email" }, ExpressionAttributeValues: { ":email_val": data.email } })
+  const command = new ScanCommand({ TableName: USERS_TABLE, FilterExpression: `#email = :email_val`, ExpressionAttributeNames: { "#email": "email" }, ExpressionAttributeValues: { ":email_val": email } })
   const result = await docClient.send(command)
   callback(null, {
     statusCode: 200,
