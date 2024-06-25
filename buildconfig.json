@@ -2,5 +2,5 @@
   "projectName": "whitedwarf",
   "defaultTimeout": 60,
   "defaultMemorySize": 128,
-  "rootFolder": "src"
+  "rootFolder": "src/routes"
 }
