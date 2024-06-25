@@ -4,7 +4,6 @@ import {
   DynamoDBDocumentClient,
   GetCommand,
 } from "@aws-sdk/lib-dynamodb"
-import { SuccessResponse } from "../../classes/httpResponses"
 
 export async function handler(event, context, callback) {
   const data = event.body
@@ -13,7 +12,16 @@ export async function handler(event, context, callback) {
   const docClient = DynamoDBDocumentClient.from(client)
   const command = new GetCommand({ TableName: USERS_TABLE, Key: { email: data.email } })
   const result = await docClient.send(command)
-  callback(null, new SuccessResponse({data, result}))
+  callback(null, {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: {
+      data,
+      result
+    }
+  })
 }
 
 export const timeout = 10
